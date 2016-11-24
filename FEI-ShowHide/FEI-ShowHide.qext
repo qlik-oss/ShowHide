@@ -1,13 +1,14 @@
 {
-	"name": "ShowHide",
-	"description": "Show different visualizations based on different conditions.",
+	"name": "ShowHide Container",
+	"description": "A container that shows or hides master visualizations based on IF conditions.",
 	"type": "visualization",
-	"version": "1.0.0",
+	"version": "1.1",
 	"icon": "extension",
-	"author": "",
+	"author": "Fady Heiba",
 	"homepage": "",
+    "preview" : "FEI-ShowHide.png",
 	"keywords": "qlik-sense, visualization",
-	"license": "",
+	"license": "ICS",
 	"repository": "",
 	"dependencies": {
 		"qlik-sense": ">=3.0.x"

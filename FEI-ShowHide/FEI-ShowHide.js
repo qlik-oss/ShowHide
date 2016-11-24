@@ -1,128 +1,100 @@
-define( ["qlik", "jquery",'./properties'],
-       function (qlik, $, properties) {
-    //    'use strict';
-    
+define(['js/qlik', './properties'], function (qlik, properties) {
     return {
-        support : {
-            snapshot: true,
-            export: true,
-            exportData : false
-        },
+        initialProperties: {conditionalVis: [], defaultMasterObject: ''},
+        support: {snapshot: true},
         definition: properties,
-        paint: function ($element, layout) {
-            console.log("------------------------------------",layout);
-            
-            if(eval('typeof currentVisID_'+layout.qInfo.qId+'=="undefined"')){
-                var r = Math.floor(Math.random()*10001);
-                eval('currentVisID_'+layout.qInfo.qId+' = 0;');
-            }
-            
-            var app = qlik.currApp(this); 
+        template: '<div style="display:block;  width:100%; height:100%; overflow:visible;"></div>',
+        controller: function ($scope, $element) {
+            // Make sure the selections bar can overlay the extension's boundaries
+            $(".qv-object .qv-inner-object").css('overflow','visible');
 
-            var conditionToShow = 0;  
-            var masterObjectIDs = [];
-            var conditionCounter = 0;
+            // On initial load, get the active visualization ID we should display and initialize the current chart object
+            $scope.app = qlik.currApp();
+            $scope.currentChart = getActiveVisID($scope.component.model.layout.conditionalVis);
+            $scope.currentChartModel = null;
 
-            //Resetting unused conditions
-            for(var i=layout.props.noOfObjects; i<=9; i++){
-                eval('layout.props.condition' + i +'=0;');
-            }
+            // If we do have a chart ID, render the object.
+            if($scope.currentChart) {
+                renderChart();
+            };
 
-            //Collecting masterObjectIDs and summing used conditions
-            for(var i=0; i<layout.props.noOfObjects; i++){
-                masterObjectIDs.push(eval('layout.props.masterObject' + i));
-                if(i!=0){
-                    conditionCounter = conditionCounter + parseInt(eval('layout.props.condition'+i));
+            // When data has been updated on the server
+            $scope.component.model.Validated.bind(function() {
+                // Make sure the selections bar can overlay the extension's boundaries
+                $(".qv-object .qv-inner-object").css('overflow','visible');
+
+                // Get the active visualization ID after the data is updated
+                var chart = getActiveVisID($scope.component.model.layout.conditionalVis);
+
+                // If we do have a chart ID and it's a different one than the currentChart, update the currentChart and then render the new object
+                if(chart && chart !== $scope.currentChart) {
+                    $scope.currentChart = chart;
+                    renderChart();
                 }
-            }
-            console.log(layout.qInfo.qId, 'Master Object IDs: ',masterObjectIDs);
-
-            //Show Vis 9
-            if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9==1){
-                conditionToShow = 9;
-            }
-            //Show Vis 8
-            else if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8==1 && layout.props.condition9!=1){
-                conditionToShow = 8;
-            }
-            //Show Vis 7
-            else if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7==1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 7;
-            }
-            //Show Vis 6
-            else if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6==1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 6;
-            }
-            //Show Vis 5
-            else if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5==1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 5;
-            }
-            //Show Vis 4
-            else if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4==1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 4;
-            }
-            //Show Vis 3
-            else if(layout.props.condition1!=1 && layout.props.condition2!=1 && layout.props.condition3==1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 3;
-            }
-            //Show Vis 2
-            else if(layout.props.condition1!=1 && layout.props.condition2==1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 2;
-            }
-            //Show Vis 1
-            else if(layout.props.condition1==1 && layout.props.condition2!=1 && layout.props.condition3!=1 && layout.props.condition4!=1 && layout.props.condition5!=1 && layout.props.condition6!=1 && layout.props.condition7!=1 && layout.props.condition8!=1 && layout.props.condition9!=1){
-                conditionToShow = 1;
-            }
-            //Show Default Vis
-            else if(conditionCounter>1 || conditionCounter==0){
-                conditionToShow = 0;
-            }
-
-            if(conditionToShow==0){console.log(layout.qInfo.qId, 'Showing default condition because:');}
-            else{console.log(layout.qInfo.qId, 'Showing condition '+conditionToShow+' because:');}
-
-            for(var i=1; i<layout.props.noOfObjects; i++){console.log(layout.qInfo.qId, '   -Object '+i+' Condition: ', eval('layout.props.condition'+i));}
-            console.log(layout.qInfo.qId, '   -Sum of conditions (Anything != 1 is default): ', conditionCounter);
-
-            if(eval('currentVisID_'+layout.qInfo.qId) == masterObjectIDs[conditionToShow] && document.getElementById('ShowHideVis_' + layout.qInfo.qId)!=null){
-                console.log(layout.qInfo.qId, 'Previous Vis ID was: ', eval('currentVisID_'+layout.qInfo.qId));
-                console.log(layout.qInfo.qId, 'Showing the same Vis ID since the condition persisted: ', masterObjectIDs[conditionToShow]);
-            }
-            else{
-                $( "div[id*=ShowHideVis_" + layout.qInfo.qId +"]").remove();
-                var html = '<div id="ShowHideVis_' + layout.qInfo.qId + '" style="display:block; margin-top:35px; width:100%; height:100%"></div>';
-                $element.html(html);
-                if(layout.props.calculationConditionSwitch){
-                    console.log(layout.props.calculationConditionMessage);
-                    if(layout.props.calculationCondition==1){
-                        var getVis = app.getObject(document.getElementById('ShowHideVis_' + layout.qInfo.qId), masterObjectIDs[conditionToShow]);
-                        getVis.then(function(){
-                            eval('currentVisID_'+layout.qInfo.qId+' = masterObjectIDs[conditionToShow];'); 
-                        }).then(function(){
-                            console.log(layout.qInfo.qId, 'Previous Vis ID was: ', eval('currentVisID_'+layout.qInfo.qId));
-                            console.log(layout.qInfo.qId, 'Changing container to VisID: ', masterObjectIDs[conditionToShow]);
-                        });
-                    }
-                    else{
-                        eval('currentVisID_'+layout.qInfo.qId+' = 0;'); 
-                        $( "div[id*=ShowHideVis_" + layout.qInfo.qId +"]").remove();
-                        var html = '<p>'+layout.props.calculationConditionMessage+'</p>';
-                        $element.html(html);
+                /* Else if we do not have a chart ID, check if this is the first time we don't have a chart ID. If it is, destroy the current chart object first. If it's not the first time, we can safely assume there aren't any leftover unused objects.*/
+                else if(!chart && chart !== $scope.currentChart){
+                    if ($scope.currentChartModel){
+                        $scope.currentChart = null;
+                        destroyObject();
                     }
                 }
-                else if(masterObjectIDs[conditionToShow]!=""){                    
-                    var getVis = app.getObject(document.getElementById('ShowHideVis_' + layout.qInfo.qId), masterObjectIDs[conditionToShow]);
-                    getVis.then(function(){
-                        eval('currentVisID_'+layout.qInfo.qId+' = masterObjectIDs[conditionToShow];'); 
-                    }).then(function(){
-                        console.log(layout.qInfo.qId, 'Previous Vis ID was: ', eval('currentVisID_'+layout.qInfo.qId));
-                        console.log(layout.qInfo.qId, 'Changing container to VisID: ', masterObjectIDs[conditionToShow]);
+                else if(!chart && chart === $scope.currentChart){
+                    $scope.currentChartModel = null;
+                }
+
+            });
+
+            /* If only one condition results in 1, return its visualization ID. Else if default exists, return the default 
+            visualization ID, otherwise return null*/
+            function getActiveVisID(conditionalVisList) {
+                var conditionResults = conditionalVisList.map(function(visObject) {
+                    return +visObject.condition
+                });
+
+                var sumOfResults = conditionResults.reduce(function(a, b) {return a + b;}, 0);
+                var activeChart = null;
+                if(sumOfResults==1){
+                    if(conditionalVisList[conditionResults.indexOf(1)].conditionalMasterObject){
+                        activeChart = conditionalVisList[conditionResults.indexOf(1)].conditionalMasterObject.split('|')[1]
+                    }
+                    else{activeChart = null}
+                }
+                else if($scope.component.model.layout.defaultMasterObject){activeChart = $scope.component.model.layout.defaultMasterObject.split('|')[1]}
+                else{activeChart = null}
+                
+                console.log('Condition Results:',conditionResults);
+                console.log('Active Chart is: ', activeChart);
+                            
+                return activeChart;
+            };
+
+            /* If there is no current chart object (on initialization or a null chart ID), do the getObject and assign it to our template div.
+               Else if there is a current chart object, destroy it first, then do the getObject and assign it to our template div. */
+            function renderChart() {
+                if(!$scope.currentChartModel) {
+                    $scope.app.getObject($element.find('div'), $scope.currentChart).then(function(model) {
+                        $scope.currentChartModel = model;
                     });
                 }
-                else{
-                    eval('currentVisID_'+layout.qInfo.qId+' = 0;'); 
+                else {
+                    destroyObject().then(function() {
+                        $scope.app.getObject($element.find('div'), $scope.currentChart).then(function(model) {
+                            $scope.currentChartModel = model;
+                        }); 
+                    });
                 }
-            }
+            };
+
+            //Destroy any leftover models to avoid memory leaks of unused objects
+            function destroyObject() {
+                return $scope.app.destroySessionObject($scope.currentChartModel.layout.qInfo.qId)
+                    .then(function() {return $scope.currentChartModel.close();}).then(function(){$scope.currentChartModel = null;});
+            };
+
+        },
+        paint: function ($element, $layout) {},
+        resize: function () {
+            return false; // We do not need to handle resizes in this extension as the charts will resize themselves.
         }
     }
 });
