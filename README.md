@@ -1,11 +1,11 @@
 # ShowHide
 ##A container that shows or hides master visualizations based on IF conditions. 
 ###These IF conditions that control which visualization are shown could be based on:
-###User accessing the chart
-###Variables for real estate
-###Variables for alerting
-###Drilldown Maps (GetPossibleCount)
-###Drilldown into Big Data (GetPossibleCount)
+###- User accessing the chart
+###- Variables for real estate
+###- Variables for alerting
+###- Drilldown Maps (GetPossibleCount)
+###- Drilldown into Big Data (GetPossibleCount)
 
 ##Examples:
 ###User accessing the chart: 
