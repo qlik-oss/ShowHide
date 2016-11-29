@@ -41,8 +41,8 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                 else if(!chart && chart === $scope.currentChart){
                     $scope.currentChartModel = null;
                 }
-
             });
+
 
             /* If only one condition results in 1, return its visualization ID. Else if default exists, return the default 
             visualization ID, otherwise return null*/
@@ -61,34 +61,48 @@ define(['js/qlik', './properties'], function (qlik, properties) {
                 }
                 else if($scope.component.model.layout.defaultMasterObject){activeChart = $scope.component.model.layout.defaultMasterObject.split('|')[1]}
                 else{activeChart = null}
-                
+
                 console.log('Condition Results:',conditionResults);
                 console.log('Active Chart is: ', activeChart);
-                            
+
                 return activeChart;
             };
 
             /* If there is no current chart object (on initialization or a null chart ID), do the getObject and assign it to our template div.
                Else if there is a current chart object, destroy it first, then do the getObject and assign it to our template div. */
             function renderChart() {
-                if(!$scope.currentChartModel) {
+                if($scope.currentChartModel==null) {
                     $scope.app.getObject($element.find('div'), $scope.currentChart).then(function(model) {
                         $scope.currentChartModel = model;
                     });
                 }
                 else {
-                    destroyObject().then(function() {
-                        $scope.app.getObject($element.find('div'), $scope.currentChart).then(function(model) {
-                            $scope.currentChartModel = model;
-                        }); 
-                    });
+                    $scope.currentChartModel.enigmaModel.endSelections(true)
+                        .then(destroyObject)
+                        .then(
+                        function() {
+                            $scope.app.getObject($element.find('div'), $scope.currentChart)
+                                .then(function(model) {
+                                $scope.currentChartModel = model;
+                            });
+                        });
                 }
             };
 
             //Destroy any leftover models to avoid memory leaks of unused objects
             function destroyObject() {
                 return $scope.app.destroySessionObject($scope.currentChartModel.layout.qInfo.qId)
-                    .then(function() {return $scope.currentChartModel.close();}).then(function(){$scope.currentChartModel = null;});
+                    .then(function() {return $scope.currentChartModel.close();})
+                    .then(function() {$scope.currentChartModel = null;});
+            };
+
+            function delay(ms){
+                var ctr, rej, p = new Promise(function (resolve, reject) {
+                    ctr = setTimeout(resolve, ms);
+                    rej = reject;
+                });
+                p.cancel = function(){ clearTimeout(ctr); rej(Error("Cancelled"))};
+                return p; 
             };
 
         },
