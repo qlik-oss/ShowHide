@@ -92,19 +92,8 @@ define(['js/qlik', './properties'], function (qlik, properties) {
             //Destroy any leftover models to avoid memory leaks of unused objects
             function destroyObject() {
                 return $scope.app.destroySessionObject($scope.currentChartModel.layout.qInfo.qId)
-                    .then(function() {return $scope.currentChartModel.close();})
                     .then(function() {$scope.currentChartModel = null;});
             };
-
-            function delay(ms){
-                var ctr, rej, p = new Promise(function (resolve, reject) {
-                    ctr = setTimeout(resolve, ms);
-                    rej = reject;
-                });
-                p.cancel = function(){ clearTimeout(ctr); rej(Error("Cancelled"))};
-                return p; 
-            };
-
         },
         paint: function ($element, $layout) {},
         resize: function () {
