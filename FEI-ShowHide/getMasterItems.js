@@ -1,4 +1,4 @@
-define(['js/qlik', 'qvangular'], function (qlik, qv) {
+define(['qlik', 'qvangular'], function (qlik, qv) {
 
     /**
      * Returns a Promise of an array of master objects within the app.

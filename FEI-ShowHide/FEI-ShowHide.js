@@ -1,4 +1,4 @@
-define(['js/qlik', './properties'], function (qlik, properties) {
+define(['qlik', './properties'], function (qlik, properties) {
     return {
         initialProperties: {conditionalVis: [], defaultMasterObject: ''},
         support: {snapshot: true},
