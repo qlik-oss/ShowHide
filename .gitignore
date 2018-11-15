@@ -1,0 +1,7 @@
+*.rej
+*.tmp
+node_modules/
+.vscode/
+dist/
+
+package-lock.json
