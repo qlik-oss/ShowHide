@@ -1,11 +1,21 @@
 # ShowHide
-## A container that shows or hides master visualizations based on IF conditions. 
+A container that shows or hides master visualizations based on IF conditions. 
 ### These IF conditions that control which visualization are shown could be based on:
-### - User accessing the chart
-### - Variables for real estate
-### - Variables for alerting
-### - Drilldown Maps (GetPossibleCount)
-### - Drilldown into Big Data (GetPossibleCount)
+ - User accessing the chart
+ - Variables for real estate
+ - Variables for alerting
+ - Drilldown Maps (GetPossibleCount)
+ - Drilldown into Big Data (GetPossibleCount)
+
+# Get Started
+
+## Installation
+1. Download the extension zip, `qlik-show-hide-container.zip`, from the latest release (https://github.com/qlik-oss/ShowHide/releases/latest)
+2. Install the extension:
+
+    a. **Qlik Sense Desktop**: unzip to a directory under [My Documents]/Qlik/Sense/Extensions.
+    
+    b. **Qlik Sense Server**: import the zip file in the QMC.
 
 ## Examples:
 ### User accessing the chart: 
@@ -36,3 +46,27 @@ Example: IF(Country='USA' and GetPossibleCount("USRegion") = 1 and GetPossibleCo
 
 ### How It Works:
 If the IF conditional of a chart results in 1, it is shown. If it is 0, it is hidden. If there are more than one visualization condition resulting in 1, or all conditions result in 0, then a default visualization is shown.
+
+# Developing the extension
+
+If you want to do code changes to the extension follow these simple steps to get going.
+
+1. Get Qlik Sense Desktop
+1. Create a new app and add qsVariable to a sheet.
+2. Clone the repository
+3. Run `npm install`
+4. Change the path to `/dist` folder in `gulpfile.js(row 8)` to be your local extensions folder. It will be something like `C:/Users/<user>/Documents/Qlik/Sense/Extensions/qlik-show-hide-container`.
+5. Run `npm run build:debug` - this command should output unminified code to the path configured in step four.
+
+```
+// Minified output to /dist folder.
+$ npm run build
+```
+
+```
+// Outputs a .zip file to /dist folder.
+$ npm run build:zip
+```
+
+# Original Author
+[fadyheiba](https://github.com/fadyheiba)
