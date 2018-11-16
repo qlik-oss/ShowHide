@@ -61,7 +61,7 @@ gulp.task('build',['clean', 'qext'], function () {
 		.pipe(gulp.dest(DIST));
 
 	return gulp.src(SRC + '/**/*.js')
-		.pipe(uglify())
+		.pipe(uglify({mangle:false}))
 		.pipe(gulp.dest(DIST));
 });
 
