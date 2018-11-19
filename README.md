@@ -1,5 +1,5 @@
 # ShowHide
-A container that shows or hides master visualizations based on IF conditions. This extension is a part of Qlik dashboard bundle, first delivered with Qlik Sense November 2018.
+A container that shows or hides master visualizations based on IF conditions. This extension is a part of dashboard bundle, first delivered with Qlik Sense November 2018.
 
 These IF conditions that control which visualization are shown could be based on:
  - User accessing the chart
