@@ -1,6 +1,6 @@
 {
     "name": "qlik-show-hide-container",
-    "version": "2.1.11",
+    "version": "2.1.12",
     "description": "A container that shows or hides master visualizations based on IF conditions.",
     "private": true,
     "homepage": "https://github.com/fadyheiba/ShowHide",
