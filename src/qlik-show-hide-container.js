@@ -45,14 +45,14 @@ define(['qlik', './properties'], function (qlik, properties) {
             $scope.interactStyle = function () {
                 var pointerEventStyle = $scope.object && $scope.object.getInteractionState() === 1 ? 'auto' : 'none';
                 return {
-                    'pointer-events' : pointerEventStyle,
+                    'pointer-events': pointerEventStyle,
                 };
             };
 
             // check to see if interactionState has changes, if so, re render charts
             $scope.$watch('options.interactionState', function (newVal) {
                 var canInteract = newVal === 1;
-                if($scope.canInteract !== canInteract) {
+                if ($scope.canInteract !== canInteract) {
                     $scope.canInteract = canInteract;
                     renderChart()
                 }
@@ -60,8 +60,8 @@ define(['qlik', './properties'], function (qlik, properties) {
 
             // check to see if noSelection has changes, if so, re render charts
             $scope.$watch('options.noSelections', function (newVal) {
-                var noSelections = newVal ===  true;
-                if($scope.noSelections !== noSelections) {
+                var noSelections = newVal === true;
+                if ($scope.noSelections !== noSelections) {
                     $scope.noSelections = noSelections;
                     renderChart()
                 }
@@ -95,7 +95,6 @@ define(['qlik', './properties'], function (qlik, properties) {
                     if ($scope.currentChartModel) {
                         $scope.currentChart = null;
                         destroyObject();
-                        $element.find(".qv-object").remove();
                     }
                 }
                 else if (!chart && chart === $scope.currentChart) {
@@ -103,37 +102,54 @@ define(['qlik', './properties'], function (qlik, properties) {
                 }
             });
 
-
             /* If there is no current chart object (on initialization or a null chart ID), do the getObject and assign it to our template div.
                Else if there is a current chart object, destroy it first, then do the getObject and assign it to our template div. */
             function renderChart() {
-                var objectOptions = {
-                    noInteraction: !$scope.canInteract,
-                    noSelections: $scope.noSelections,
-                };
                 if ($scope.currentChartModel == null) {
-                    $scope.app.getObject($element.find('div'), $scope.currentChart, objectOptions).then(function (model) {
-                        $scope.currentChartModel = model;
-                    });
-                }
-                else {
+                    createObject();
+                } else {
                     $scope.currentChartModel.enigmaModel.endSelections(true)
                         .then(destroyObject)
-                        .then(
-                            function () {
-                                $scope.app.getObject($element.find('div'), $scope.currentChart, objectOptions)
-                                    .then(function (model) {
-                                        $scope.currentChartModel = model;
-                                    });
-                            });
+                        .then(createObject);
                 }
             };
 
+            // Creates a chart with the content of the master object
+            function createObject() {
+                var objectOptions = {
+                    noInteraction: !$scope.canInteract,
+                    noSelections: $scope.noSelections
+                };
+
+                $scope.app.getObjectProperties($scope.currentChart).then(function (chartModel) {
+                    var newChartId = $scope.layout.qInfo.qId + "_" + $scope.currentChart;
+                    $scope.app.createGenericObject({ qInfo: { qId: newChartId } })
+                        .then(function (newModel) {
+                            newModel.copyFrom($scope.currentChart).then(function () {
+                                newModel.getProperties().then(function (props) {
+                                    if (!chartModel.properties.qStateName) {
+                                        // No qStateName on child, so make it inherit qStateName of this
+                                        props.qStateName = $scope.layout.qStateName || '';
+                                    }
+
+                                    newModel.setProperties(props).then(function () {
+                                        $scope.app.visualization.get(newChartId).then(function (visualization) {
+                                            $scope.currentChartModel = visualization.model;
+                                            visualization.show($element.find('div'), objectOptions);
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                });
+            }
+
             //Destroy any leftover models to avoid memory leaks of unused objects
             function destroyObject() {
+                $element.find(".qv-object").remove();
                 return $scope.app.destroySessionObject($scope.currentChartModel.layout.qInfo.qId)
                     .then(function () { $scope.currentChartModel = null; });
             };
-        }
+        },
     }
 });
