@@ -37,9 +37,6 @@ define(['./get-master-items'], function (getMasterItems) {
                         }
                     }
                 }
-            },
-            selections:{
-              show:false
             }
         }
     };

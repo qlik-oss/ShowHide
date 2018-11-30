@@ -103,37 +103,40 @@ define(['qlik', './properties'], function (qlik, properties) {
                 }
             });
 
-
             /* If there is no current chart object (on initialization or a null chart ID), do the getObject and assign it to our template div.
                Else if there is a current chart object, destroy it first, then do the getObject and assign it to our template div. */
             function renderChart() {
-                var objectOptions = {
-                    noInteraction: !$scope.canInteract,
-                    noSelections: $scope.noSelections,
-                };
                 if ($scope.currentChartModel == null) {
-                    $scope.app.getObject($element.find('div'), $scope.currentChart, objectOptions).then(function (model) {
-                        $scope.currentChartModel = model;
-                    });
-                }
-                else {
+                    createObject();
+                } else {
                     $scope.currentChartModel.enigmaModel.endSelections(true)
                         .then(destroyObject)
-                        .then(
-                            function () {
-                                $scope.app.getObject($element.find('div'), $scope.currentChart, objectOptions)
-                                    .then(function (model) {
-                                        $scope.currentChartModel = model;
-                                    });
-                            });
+                        .then(createObject);
                 }
             };
+
+            // Creates a chart with the content of the master object
+            function createObject() {
+                var objectOptions = {
+                    noInteraction: !$scope.canInteract,
+                    noSelections: $scope.noSelections
+                };
+
+                $scope.app.visualization.get($scope.currentChart).then(function (visualization) {
+                    if ($scope.component.model.layout.qStateName) {
+                        visualization.setOptions(
+                            {qStateName: $scope.component.model.layout.qStateName});
+                    }
+                    $scope.currentChartModel = visualization.model;
+                    visualization.show($element.find('div'), objectOptions);
+                });
+            }
 
             //Destroy any leftover models to avoid memory leaks of unused objects
             function destroyObject() {
                 return $scope.app.destroySessionObject($scope.currentChartModel.layout.qInfo.qId)
                     .then(function () { $scope.currentChartModel = null; });
             };
-        }
+        },
     }
 });
