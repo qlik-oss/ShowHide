@@ -3,6 +3,7 @@ var gulp = require('gulp');
 var cssnano = require('gulp-cssnano');
 var gutil = require('gulp-util');
 var uglify = require('gulp-uglify');
+var saveLicense = require('uglify-save-license');
 var pkg = require('./package.json');
 
 var DIST = './dist',
@@ -43,7 +44,7 @@ gulp.task('qext', function () {
 			cwd: '',
 			base: '',
 			path: NAME + '.qext',
-			contents: new Buffer(JSON.stringify(qext, null, 4))
+			contents: Buffer.from(JSON.stringify(qext, null, 4))
 		}));
 		this.push(null);
 	};
@@ -61,7 +62,12 @@ gulp.task('build',['clean', 'qext'], function () {
 		.pipe(gulp.dest(DIST));
 
 	return gulp.src(SRC + '/**/*.js')
-		.pipe(uglify({mangle:false}))
+		.pipe(uglify({
+			mangle: false,
+			output: {
+				comments: saveLicense
+			}
+		}))
 		.pipe(gulp.dest(DIST));
 });
 
