@@ -70,7 +70,7 @@ define(['qlik', './properties'], function (qlik, properties) {
             // On initial load, get the active visualization ID we should display and initialize the current chart object
             $scope.app = qlik.currApp(this);
             $scope.currentChart = getActiveVisID($scope.component.model.layout.conditionalVis);
-            $scope.currentChartModel = null;
+            $scope.currentVisualization = null;
 
             // If we do have a chart ID, render the object.
             if ($scope.currentChart) {
@@ -92,25 +92,25 @@ define(['qlik', './properties'], function (qlik, properties) {
                 }
                 /* Else if we do not have a chart ID, check if this is the first time we don't have a chart ID. If it is, destroy the current chart object first. If it's not the first time, we can safely assume there aren't any leftover unused objects.*/
                 else if (!chart && chart !== $scope.currentChart) {
-                    if ($scope.currentChartModel) {
+                    if ($scope.currentVisualization) {
                         $scope.currentChart = null;
                         destroyObject();
                     }
                 }
                 else if (!chart && chart === $scope.currentChart) {
-                    $scope.currentChartModel = null;
+                    $scope.currentVisualization = null;
                 }
             });
 
             /* If there is no current chart object (on initialization or a null chart ID), do the getObject and assign it to our template div.
                Else if there is a current chart object, destroy it first, then do the getObject and assign it to our template div. */
             function renderChart() {
-                if ($scope.currentChartModel == null) {
+                if ($scope.currentVisualization == null) {
                     createObject();
                 } else {
-                    $scope.currentChartModel.enigmaModel.endSelections(true)
-                        .then(destroyObject)
-                        .then(createObject);
+                    $scope.selectionsApi.confirm();
+                    destroyObject();
+                    createObject();
                 }
             };
 
@@ -123,32 +123,42 @@ define(['qlik', './properties'], function (qlik, properties) {
 
                 $scope.app.getObjectProperties($scope.currentChart).then(function (chartModel) {
                     var newChartId = $scope.layout.qInfo.qId + "_" + $scope.currentChart;
-                    $scope.app.createGenericObject({ qInfo: { qId: newChartId } })
-                        .then(function (newModel) {
-                            newModel.copyFrom($scope.currentChart).then(function () {
-                                newModel.getProperties().then(function (props) {
-                                    if (!chartModel.properties.qStateName) {
-                                        // No qStateName on child, so make it inherit qStateName of this
-                                        props.qStateName = $scope.layout.qStateName || '';
-                                    }
 
-                                    newModel.setProperties(props).then(function () {
-                                        $scope.app.visualization.get(newChartId).then(function (visualization) {
-                                            $scope.currentChartModel = visualization.model;
-                                            visualization.show($element.find('div'), objectOptions);
-                                        });
-                                    });
+                    return $scope.app.getObjectProperties(newChartId).then(function (newChartModel) {
+                        // Custom object already exists
+                        return newChartModel;
+                    }).catch(function () {
+                        // Custom object doesn't exists, so create it
+                        return $scope.app.createGenericObject({qInfo: {qId: newChartId}}).then(function (newChartModel) {
+                            return newChartModel.copyFrom($scope.currentChart).then(function () {
+                                return newChartModel.getProperties().then(function () {
+                                    return newChartModel;
                                 });
                             });
                         });
+                    }).then(function (newChartModel) {
+                        if (!chartModel.properties.qStateName) {
+                            // No qStateName on child, so make it inherit qStateName of this
+                            newChartModel.properties.qStateName = $scope.layout.qStateName || '';
+                        }
+
+                        return newChartModel.setProperties(newChartModel.properties).then(function () {
+                            return $scope.app.visualization.get(newChartId).then(function (visualization) {
+                                $scope.currentVisualization = visualization;
+                                return visualization.show($element.find('div'), objectOptions);
+                            });
+                        });
+                    });
                 });
             }
 
             //Destroy any leftover models to avoid memory leaks of unused objects
             function destroyObject() {
                 $element.find(".qv-object").remove();
-                return $scope.app.destroySessionObject($scope.currentChartModel.layout.qInfo.qId)
-                    .then(function () { $scope.currentChartModel = null; });
+                if ($scope.currentVisualization) {
+                    $scope.currentVisualization.close();
+                    $scope.currentVisualization = null;
+                }
             };
         },
     }
