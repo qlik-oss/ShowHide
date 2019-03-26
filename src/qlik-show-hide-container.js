@@ -38,10 +38,9 @@ define(['qlik', './properties'], function (qlik, properties) {
             '.qv-mode-edit .qv-object-qlik-show-hide-container .qv-inner-object {overflow:hidden;}</style>' +
             '<div ng-style="interactStyle()" style="display:block;  width:100%; height:100%; overflow:visible;"></div>',
         controller: function ($scope, $element) {
-            // Make sure the selections bar can overlay the extension's boundaries
-            //$element.find(".qv-object .qv-inner-object").css('overflow', 'visible');
             $scope.canInteract = $scope.options && $scope.options.interactionState === 1;
             $scope.noSelections = $scope.options && $scope.options.noSelections === true;
+            $scope.canZoom = $scope.options && $scope.options.zoomEnabled === true;
             $scope.interactStyle = function () {
                 var pointerEventStyle = $scope.object && $scope.object.getInteractionState() === 1 ? 'auto' : 'none';
                 return {
@@ -145,7 +144,9 @@ define(['qlik', './properties'], function (qlik, properties) {
                         return newChartModel.setProperties(newChartModel.properties).then(function () {
                             return $scope.app.visualization.get(newChartId).then(function (visualization) {
                                 $scope.currentVisualization = visualization;
-                                return visualization.show($element.find('div'), objectOptions);
+                                return visualization.show($element.find('div'), objectOptions).then(function () {
+                                    $element.find('.qv-object-wrapper').scope().options.zoomEnabled = $scope.canZoom;
+                                });
                             });
                         });
                     });
@@ -154,7 +155,7 @@ define(['qlik', './properties'], function (qlik, properties) {
 
             //Destroy any leftover models to avoid memory leaks of unused objects
             function destroyObject() {
-                $element.find(".qv-object").remove();
+                $element.find(".qv-object-wrapper").remove();
                 if ($scope.currentVisualization) {
                     $scope.currentVisualization.close();
                     $scope.currentVisualization = null;
