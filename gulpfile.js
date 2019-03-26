@@ -8,14 +8,15 @@ var pkg = require('./package.json');
 
 var DIST = './dist',
 	SRC = './src',
-	NAME = pkg.name;
+	NAME = pkg.name,
+	VERSION = process.env.VERSION || 'local-dev';
 
 gulp.task('qext', function () {
 	var qext = {
 		name: 'Show/hide container',
 		type: 'visualization',
 		description: pkg.description,
-		version: pkg.version,
+		version: VERSION,
 		icon: 'general-data-class',
 		preview: 'qlik-show-hide-container.png',
 		keywords: 'qlik-sense, visualization',
@@ -75,16 +76,7 @@ gulp.task('zip', ['build'], function () {
 	var zip = require('gulp-zip');
 
 	return gulp.src(DIST + '/**/*')
-		.pipe(zip(`${NAME}_${pkg.version}.zip`))
-		.pipe(gulp.dest(DIST));
-});
-
-gulp.task('debug', ['clean', 'qext'], function () {
-	return gulp.src([
-		SRC + '/**/*.png', 
-		SRC + '/**/*.js',
-		DIST + '/**/*.qext'
-	])
+		.pipe(zip(`${NAME}_${VERSION}.zip`))
 		.pipe(gulp.dest(DIST));
 });
 
