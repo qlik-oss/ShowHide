@@ -15,7 +15,7 @@ gulp.task('qext', function () {
 	var qext = {
 		name: 'Show/hide container',
 		type: 'visualization',
-		description: pkg.description,
+		description: pkg.description + '\nVersion: ' + VERSION,
 		version: VERSION,
 		icon: 'general-data-class',
 		preview: 'qlik-show-hide-container.png',
