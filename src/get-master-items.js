@@ -3,7 +3,7 @@ define(['qlik'], function (qlik) {
     /**
      * Returns a Promise of an array of master objects within the app.
      */
-    var KNOWN_CONTAINERS = ['qlik-show-hide-container', 'qlik-tabbed-container'];
+    var KNOWN_CONTAINERS = ['qlik-show-hide-container', 'qlik-tabbed-container', 'qlik-trellis-container'];
     return function () {
         var app = qlik.currApp();
         var masterObjectPromise = app.getList('masterobject').then(function (model) {
